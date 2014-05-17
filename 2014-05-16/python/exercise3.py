@@ -1,5 +1,16 @@
 from pyplasm import *
+from scipy import *
+import os,sys
+""" import modules from larcc/lib """
+sys.path.insert(0, '/Library/Python/2.7/site-packages/lar-cc/lib/py/')
+from lar2psm import *
+from simplexn import *
 from larcc import *
+from largrid import *
+from mapper import *
+from boolean import *
+from sysml import *
+
 
 
 DRAW = COMP([VIEW,STRUCT,MKPOLS])
@@ -33,4 +44,5 @@ def total_function (master,blocks,intervals):
         toRemove.append(choice)
         choice = input()
     master = master[0], [cell for k,cell in enumerate(master[1]) if not (k in toRemove)]
+    
     return master
