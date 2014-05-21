@@ -29,7 +29,6 @@ hpc = SKEL_1(STRUCT(MKPOLS(master)))
 hpc = cellNumbering (master,hpc)(range(len(master[1])),CYAN,2)
 #VIEW(hpc)
 
-
 # creazione finestra 1
 toMerge = 11
 cell = MKPOL([master[0],[[v+1 for v in  master[1][toMerge]]],None])
@@ -63,7 +62,7 @@ hpc = cellNumbering (master,hpc)(range(len(master[1])),CYAN,2)
 toMerge = 3
 cell = MKPOL([master[0],[[v+1 for v in  master[1][toMerge]]],None])
 #VIEW(STRUCT([hpc,cell]))
-diagram = assemblyDiagramInit([1,3,3])([[.1],[.75,.75,.5],[.6,1,.4]])
+diagram = assemblyDiagramInit([1,3,3])([[.1],[.75,.75,.5],[1,1,.4]])
 master = diagram2cell(diagram,master,toMerge)
 hpc = SKEL_1(STRUCT(MKPOLS(master)))
 hpc = cellNumbering (master,hpc)(range(len(master[1])),CYAN,2)
@@ -76,7 +75,7 @@ master = master[0], [cell for k,cell in enumerate(master[1]) if not (k in toRemo
 toMerge = 60
 cell = MKPOL([master[0],[[v+1 for v in  master[1][toMerge]]],None])
 #VIEW(STRUCT([hpc,cell]))
-diagram = assemblyDiagramInit([1,3,3])([[.1],[.75,.75,.5],[.6,1,.4]])
+diagram = assemblyDiagramInit([1,3,3])([[.1],[.75,.75,.5],[1,1,.4]])
 master = diagram2cell(diagram,master,toMerge)
 hpc = SKEL_1(STRUCT(MKPOLS(master)))
 hpc = cellNumbering (master,hpc)(range(len(master[1])),CYAN,2)
@@ -167,7 +166,7 @@ master = master[0], [cell for k,cell in enumerate(master[1]) if not (k in toRemo
 toMerge = 72
 cell = MKPOL([master[0],[[v+1 for v in  master[1][toMerge]]],None])
 #VIEW(STRUCT([hpc,cell]))
-diagram = assemblyDiagramInit([3,1,3])([[1.25,1.5,1.25],[.1],[.6,1,.4]])
+diagram = assemblyDiagramInit([3,1,3])([[1.25,1.5,1.25],[.1],[.01,1.75,.24]])
 master = diagram2cell(diagram,master,toMerge)
 hpc = SKEL_1(STRUCT(MKPOLS(master)))
 hpc = cellNumbering (master,hpc)(range(len(master[1])),CYAN,2)
@@ -235,12 +234,27 @@ cell = MKPOL([master[0],[[v+1 for v in  master[1][toMerge]]],None])
 diagram = assemblyDiagramInit([1,3,2])([[.1],[.5,.75,.5],[1.75,.25]])
 master = diagram2cell(diagram,master,toMerge)
 hpc = SKEL_1(STRUCT(MKPOLS(master)))
+
 # blocchi finali numerati
 hpc = cellNumbering (master,hpc)(range(len(master[1])),CYAN,2)
 VIEW(hpc)
 toRemove = [190]
-
 # abitazione complessiva
 master = master[0], [cell for k,cell in enumerate(master[1]) if not (k in toRemove)]
+#DRAW(master)
 
-DRAW(master)
+# creo il balcone
+b = assemblyDiagramInit([3,3,2])([[.1,4,.1],[.1,2,.1],[.1,1]])
+V,CV = b
+hpc = SKEL_1(STRUCT(MKPOLS(b)))
+hpc = cellNumbering (b,hpc)(range(len(CV)),CYAN,2)
+VIEW(hpc)
+toRemove = [9,11]
+b = b[0], [cell for k,cell in enumerate(b[1]) if not (k in toRemove)]
+#b = T(1)(-1.4)(STRUCT(MKPOLS(b)))
+b = T([1])([5.2])(STRUCT(MKPOLS(b)))
+#VIEW(b)
+master = (STRUCT(MKPOLS(master)))
+completo = STRUCT([master, b])
+
+VIEW(completo)
