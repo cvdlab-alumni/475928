@@ -236,8 +236,8 @@ master = diagram2cell(diagram,master,toMerge)
 hpc = SKEL_1(STRUCT(MKPOLS(master)))
 
 # blocchi finali numerati
-hpc = cellNumbering (master,hpc)(range(len(master[1])),CYAN,2)
-VIEW(hpc)
+hpc1 = cellNumbering (master,hpc)(range(len(master[1])),CYAN,2)
+#VIEW(hpc1)
 toRemove = [190]
 # abitazione complessiva
 master = master[0], [cell for k,cell in enumerate(master[1]) if not (k in toRemove)]
@@ -246,12 +246,13 @@ master = master[0], [cell for k,cell in enumerate(master[1]) if not (k in toRemo
 # creo il balcone
 b = assemblyDiagramInit([3,3,2])([[.1,4,.1],[.1,2,.1],[.1,1]])
 V,CV = b
-hpc = SKEL_1(STRUCT(MKPOLS(b)))
-hpc = cellNumbering (b,hpc)(range(len(CV)),CYAN,2)
-VIEW(hpc)
+hpc2 = SKEL_1(STRUCT(MKPOLS(b)))
+hpc2 = T([1])([5.2])(cellNumbering (b,hpc2)(range(len(CV)),RED,2))
+#VIEW(hpc2)
+# totale blocchi numerati
+VIEW (STRUCT([hpc1, hpc2]))
 toRemove = [9,11]
 b = b[0], [cell for k,cell in enumerate(b[1]) if not (k in toRemove)]
-#b = T(1)(-1.4)(STRUCT(MKPOLS(b)))
 b = T([1])([5.2])(STRUCT(MKPOLS(b)))
 #VIEW(b)
 master = (STRUCT(MKPOLS(master)))
