@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html>
+<head> 
+<title> Lampada </title> 
+<!-- JavaScript libraries -->
+<script src="http://cdnjs.cloudflare.com/ajax/libs/three.js/r67/three.min.js"></script> 
+<script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/stats.js/r11/Stats.min.js"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.5/dat.gui.min.js"></script>
+<script src="assets/libs/TrackballControls.js"></script>
+<script type="text/javascript" src="assets/fonts/helvetiker_regular.typeface.js"></script>
+<script type="text/javascript" src="assets/fonts/helvetiker_bold.typeface.js"></script>
+<script type="text/javascript" src="assets/fonts/bitstream_vera_sans_mono_roman.typeface.js"></script>
+<script src="assets/libs/tween.min.js"></script>
+<style>
+    body {
+    margin: 0;
+    overflow: hidden;
+    }
+
+    #stats {  /* Align stats top-left */
+      position: absolute;
+      left: 0px;
+      top: 0px;
+    }
+</style> 
+</head> 
+<body>
+
+<div id="Stats-output">
+</div>
+<!-- Div which will hold the Output -->
+<div id="WebGL-output">
+</div>
+
+<!-- Javascript code that runs our Three.js examples -->
+<script type="text/javascript">
+
+// once everything is loaded, we run our Three.js stuff.
+$(function () {
+    var stats = initStats();
+       
+    var scene = new THREE.Scene();
+    var camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.1, 1000);
+    // position and point the camera to the center of the scene
+    camera.position.set(-100, 200, 80);
+    camera.up = new THREE.Vector3(0,0,1);
+        
+    var renderer = new THREE.WebGLRenderer();
+    // create a render and set the size
+    renderer.setClearColor(new THREE.Color(0xEEEEEE,1.0));
+    renderer.setSize(window.innerWidth,window.innerHeight);
+    renderer.shadowMapEnabled = true;
+    renderer.shadowMapAutoUpdate=true;
+    var trackballControls = new THREE.TrackballControls(camera);
+
+    // add subtle ambient lighting
+    var ambiColor = "#0c0c0c";
+    var ambientLight = new THREE.AmbientLight(ambiColor);
+    scene.add(ambientLight);
+
+    var lightColor = "#ffffff";
+    var directionalLight = new THREE.DirectionalLight(lightColor);
+    directionalLight.position.set(0, 0, .7);
+    directionalLight.intensity = .5;
+    scene.add(directionalLight);
+
+    var axisHelper = new THREE.AxisHelper(3);
+    scene.add(axisHelper);
+
+    // create the ground plane
+    var planeGeometry = new THREE.PlaneGeometry(200, 100, 200, 100);
+    var planeMaterial = new THREE.MeshLambertMaterial({color: 0x808080});
+    var plane = new THREE.Mesh(planeGeometry, planeMaterial);
+    plane.receiveShadow = true;
+
+    plane.position.x = -70;
+    plane.position.y = 15;
+    plane.position.z = -3.5;
+
+    // add the plane to the scene
+    scene.add(plane);
+
+    camera.lookAt(plane.position);
+
+    function mkJoint (radius, height) {
+        var joint = new THREE.Object3D();
+
+        // create the basis
+        var basisGeometry = new THREE.SphereGeometry( 3, 20, 20, 0, 3.1, 0, 3.1);
+        var basisMaterial = new THREE.MeshBasicMaterial( {color: 0x808080} );
+        var meshMaterial = new THREE.MeshPhongMaterial({specular: 0x808080, color: 0x808080, shininess: 100, metal: true});
+        meshMaterial.side = THREE.DoubleSide;
+        var basis = new THREE.SceneUtils.createMultiMaterialObject(basisGeometry, [meshMaterial]);
+        basis.castShadow = true;
+
+        // position the basis
+        basis.position.x = 0;
+        basis.position.y = 0;
+        basis.position.z = -3.6;
+        // add the basis to the scene
+        scene.add(basis);
+
+        var sphereGeometry = new THREE.SphereGeometry(radius, 32, 32);
+        var sphereMaterial = new THREE.MeshLambertMaterial({color: 0xc0c0c0, shading: THREE.FlatShading});
+        var meshMaterial = new THREE.MeshPhongMaterial({specular: 0xc0c0c0, color: 0xc0c0c0, shininess: 100, metal: true});
+        meshMaterial.side = THREE.DoubleSide;
+        var sphere = new THREE.SceneUtils.createMultiMaterialObject(sphereGeometry, [meshMaterial]);
+        sphere.castShadow = true;
+        sphere.position.set(0, 0, 0);
+        sphere.rotation.x = Math.PI/2;
+        joint.add(sphere);
+
+        var cylinderGeometry = new THREE.CylinderGeometry(radius, radius, height, 32, 32);
+        var cylinderMaterial = new THREE.MeshLambertMaterial({color: 0x808080, shading: THREE.FlatShading});
+        var meshMaterial = new THREE.MeshPhongMaterial({specular: 0x808080, color: 0x808080, shininess: 100, metal: true});
+        meshMaterial.side = THREE.DoubleSide;
+        var cylinder = new THREE.SceneUtils.createMultiMaterialObject(cylinderGeometry, [meshMaterial]);
+        cylinder.castShadow = true;
+        cylinder.position.set(0, height / 2 + radius, 0);
+        sphere.add(cylinder);
+
+        var hook = new THREE.Object3D();
+        hook.position.set(0, height / 2 + radius, 0);
+        hook.rotation.x = - Math.PI/2;
+        cylinder.add(hook);
+
+        joint.sphere = sphere;
+        joint.cylinder = cylinder;
+        joint.hook = hook;
+
+        return joint;
+        }
+
+    var height = 10;
+    var radius = 1;
+    var joint1 = mkJoint(radius, height);
+    scene.add(joint1);
+    var joint2 = mkJoint(radius, height);
+    joint1.hook.add(joint2);
+    joint2.rotation.z = Math.PI/2;
+
+    var sphereGeometry = new THREE.SphereGeometry(radius, 32, 32);
+    var sphereMaterial = new THREE.MeshLambertMaterial({color: 0xc0c0c0, shading: THREE.FlatShading});
+    var meshMaterial = new THREE.MeshPhongMaterial({specular: 0xc0c0c0, color: 0xc0c0c0, shininess: 100, metal: true});
+    meshMaterial.side = THREE.DoubleSide;
+    var sphere2 = new THREE.SceneUtils.createMultiMaterialObject(sphereGeometry, [meshMaterial]);
+    sphere2.castShadow = true;
+    sphere2.rotation.x = Math.PI/2;
+    joint2.hook.add(sphere2);
+
+    // lamp-holder
+    var lamp_holderGeometry = new THREE.SphereGeometry( 3, 20, 20, 0, 3.1, 0, 3.1);
+    var lamp_holderMaterial = new THREE.MeshBasicMaterial( {color: 0x808080} );
+    var meshMaterial = new THREE.MeshPhongMaterial({specular: 0x808080, color: 0x808080, shininess: 100, metal: true});
+    meshMaterial.side = THREE.DoubleSide;
+    var lamp_holder = new THREE.SceneUtils.createMultiMaterialObject(lamp_holderGeometry, [meshMaterial]);
+    lamp_holder.castShadow = true;
+
+    // position
+    lamp_holder.position.x = 0;
+    lamp_holder.position.y = 4;
+    lamp_holder.position.z = 0;
+
+    lamp_holder.rotation.x = Math.PI/2;
+    sphere2.add(lamp_holder);
+      
+    var spotLightColor = "#ffffff";
+    var pointColor = "#ffffff";
+    var spotLight = new THREE.SpotLight(pointColor, 5);
+    spotLight.position.set(0,0,0);
+    spotLight.castShadow = true;
+    spotLight.receiveShadow = true;
+    spotLight.shadowCameraNear = 20;
+    spotLight.shadowCameraFar = 2000;
+    spotLight.shadowCameraFov = 110;
+    spotLight.target = lamp_holder;
+    spotLight.distance = 0;
+    spotLight.rotation.x = Math.PI;
+
+    spotLight.shadowDarkness = .7;
+
+    // create lamp
+    var lampGeometry = new THREE.SphereGeometry(1.5, 64, 64);
+    var lampMaterial = new THREE.MeshLambertMaterial({color: spotLightColor, shading: THREE.FlatShading});
+    var meshMaterial = new THREE.MeshPhongMaterial({specular: spotLightColor, color: spotLightColor, shininess: 100, transparent: true, opacity: .01});
+    meshMaterial.side = THREE.DoubleSide;
+    var lamp = new THREE.SceneUtils.createMultiMaterialObject(sphereGeometry, [meshMaterial]);
+    lamp.rotation.z = Math.PI/2;
+
+    lamp_holder.add(lamp);
+
+    // add a small sphere simulating the pointlight
+    var smallSphereLight = new THREE.SphereGeometry(1);
+    var smallSphereLightMaterial = new THREE.MeshBasicMaterial({color: spotLightColor});
+    var smallSphereLightMesh = new THREE.Mesh(smallSphereLight, smallSphereLightMaterial);
+    smallSphereLightMesh.castShadow = true;
+    smallSphereLightMesh.position = lamp.position;
+    lamp.add(smallSphereLightMesh);
+
+    var lamp1Geometry = new THREE.SphereGeometry(.1, 64, 64);
+    var lamp1Material = new THREE.MeshLambertMaterial({color: 0xc0c0c0, shading: THREE.FlatShading});
+    var meshMaterial = new THREE.MeshPhongMaterial({specular: 0xffffff, color: 0xc0c0c0, shininess: 100, transparent: true, opacity: .01});
+    meshMaterial.side = THREE.DoubleSide;
+    var lamp1 = new THREE.SceneUtils.createMultiMaterialObject(sphereGeometry, [meshMaterial]);
+    lamp_holder.add(lamp1);
+
+    //lamp.add(lamp1);
+    lamp1.position.z = .1
+    lamp1.add(spotLight);
+
+    var cubeGeometry = new THREE.CubeGeometry(6, 6, 6);
+    var cubeMaterial = new THREE.MeshLambertMaterial({color: Math.random() * 0xc0c0c0});
+    var cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+    cube.castShadow = true;
+    cube.receiveShadow=true;
+ 
+    // cube position
+    cube.position.x = -75;
+    cube.position.y = -25;
+    cube.position.z = 3;
+
+    // add the cube to the scene
+    plane.add(cube);
+
+    var sphereGeometry = new THREE.SphereGeometry(6, 32, 32);
+    var sphereMaterial = new THREE.MeshLambertMaterial({color: Math.random() * 0xc0c0c0, shading: THREE.FlatShading});
+    var sphereMaterial = new THREE.MeshLambertMaterial({color: Math.random() * 0xc0c0c0});
+    meshMaterial.side = THREE.DoubleSide;
+    var sphere3 = new THREE.Mesh(sphereGeometry, sphereMaterial);
+          
+    sphere3.position.set(-20, -15, 6);
+    sphere3.rotation.x = Math.PI/2;
+    sphere3.castShadow = true;
+    sphere3.receiveShadow =true;
+
+    plane.add(sphere3);
+         
+    var geometry = new THREE.TorusGeometry( 5, 3, 16, 100 );
+    var material = new THREE.MeshLambertMaterial( { color: Math.random() * 0xffff00 } );
+    var material = new THREE.MeshLambertMaterial( {color: Math.random() * 0xc0c0c0});
+    meshMaterial.side = THREE.DoubleSide;
+    var torus = new THREE.Mesh( geometry, material );
+    torus.position.set(3,-25,2.5);
+    torus.castShadow=true;
+    torus.receiveShadow = true;
+
+    plane.add( torus );
+     
+    var options = {
+        size: 10,
+        height: 2,
+        weight: "normal",
+        style: "normal",
+        font: "helvetiker",
+        bevelThickness: 2,
+        bevelSize: .5,
+        bevelSegments: 3,
+        bevelEnabled: true,
+        curveSegments: 12,
+        steps: 1,
+    };
+
+    console.log(THREE.FontUtils.faces);
+
+    var text = new THREE.TextGeometry("Homework", options);
+    var textMaterial = new THREE.MeshLambertMaterial({color: Math.random() * 0xddee22, shading: THREE.FlatShading});
+    var textMaterial = new THREE.MeshLambertMaterial({color: Math.random() * 0xddee22});
+    meshMaterial.side = THREE.DoubleSide;
+    var text0 = new THREE.Mesh(text, textMaterial);
+    text0.position.x = 103;
+    text0.position.y = 15;
+    text0.position.z = .4;
+    text0.rotation.y = Math.PI;
+    text0.rotation.x = Math.PI/2;
+    text0.castShadow = true;
+    text0.receiveShadow = true;
+    plane.add(text0);
+
+
+    var text = new THREE.TextGeometry("4", options);
+    var textMaterial = new THREE.MeshLambertMaterial({color: Math.random() * 0xddee22, shading: THREE.FlatShading});
+    var textMaterial = new THREE.MeshLambertMaterial({color: Math.random() * 0xddee22});
+    meshMaterial.side = THREE.DoubleSide;
+    var text1 = new THREE.Mesh(text, textMaterial);
+    text1.position.x = -150;
+    text1.position.y = 15;
+    text1.position.z = .4;
+    text1.rotation.y = Math.PI;
+    text1.rotation.x = Math.PI/2;
+    text1.castShadow = true;
+    text1.receiveShadow = true;
+    plane.add(text1);
+
+
+    // // add the output of the renderer to the html element
+    // $("#WebGL-output").append(renderer.domElement);
+    // add the output of the renderer to the html element
+    $('body').append(renderer.domElement);
+
+    // call the render function
+    var step = 0;
+
+    var controls = new function () {
+      this.spotLightColor = spotLightColor;
+      this.alpha = 6;
+      this.beta = 1.6;
+      this.gamma = 1;
+      this.delta = 0.0;
+      this.epsilon = .2;
+      this.lightOn = true;
+
+      this.startAnimation = function () {
+
+      animate();
+
+
+      var output = document.createElement( 'div' );
+      output.style.cssText = 'position: absolute; left: 50px; top: 300px; font-size: 100px';
+      document.body.appendChild( output );
+
+      var tween = new TWEEN.Tween( text0.position )
+        .to( { x: 3 }, 3000 )
+        .easing( TWEEN.Easing.Bounce.In )
+        .start();
+
+        var tween = new TWEEN.Tween( text1.position )
+        .to( { x: -70 }, 4000 )
+        .easing( TWEEN.Easing.Bounce.In )
+        .start();
+
+      };
+    }
+
+    var gui = new dat.GUI();
+    gui.addColor(controls, 'spotLightColor').onChange(function (value) {
+      spotLight.color = new THREE.Color(value);
+      smallSphereLightMaterial.color = new THREE.Color(value);
+    });
+
+    gui.add(controls, 'alpha', 0.0, 2*Math.PI).onChange(function (value) {
+      joint1.rotation.z = value;
+    });
+
+    gui.add(controls, 'beta', 0.0, Math.PI/2).onChange(function (value) {
+      joint1.sphere.rotation.x = value; 
+    });
+
+    gui.add(controls, 'gamma', 0.0, Math.PI/2).onChange(function (value) {
+      joint2.rotation.x = value; 
+    });
+
+    gui.add(controls, 'delta', 0.0, 2*Math.PI).onChange(function (value) {
+      joint2.cylinder.rotation.y = value; 
+    });
+
+    gui.add(controls, 'epsilon', 0.0, Math.PI/2).onChange(function (value) {
+      sphere2.rotation.x = value; 
+    });
+
+    gui.add(controls, 'lightOn').onChange(function (value) {
+      if(value) {
+        lamp1.add(spotLight);
+        lamp.add(smallSphereLightMesh);
+        spotLight.castShadow = true;
+        spotLight.receiveShadow = true;
+        cube.castShadow=true;
+        cube.receiveShadow = true;
+        sphere3.castShadow=true;
+        sphere3.receiveShadow = true;
+        plane.receiveShadow=true;
+        text0.castShadow=true;
+        text0.receiveShadow=true;
+        torus.castShadow = true;
+        torus.receiveShadow = true;
+       }
+     else {
+        lamp1.remove(spotLight);
+        lamp.remove(smallSphereLightMesh);
+        spotLight.castShadow = false;
+        spotLight.receiveShadow = false;
+        cube.castShadow = false;
+        cube.receiveShadow = false;
+        sphere3.castShadow=false;
+        sphere3.receiveShadow = false;
+        plane.receiveShadow=false;
+        text0.castShadow = false;
+        text0.receiveShadow = false;
+        torus.castShadow = false;
+        torus.receiveShadow = false;
+      }
+    });
+    
+    gui.add(controls, 'startAnimation');
+
+
+    joint1.rotation.z = 6;
+    joint1.sphere.rotation.x = 1.6; 
+    joint2.rotation.x = 1;
+    joint2.cylinder.rotation.y = 0;
+    sphere2.rotation.x = .2;
+    
+
+    function animate() {
+        requestAnimationFrame( animate ); // js/RequestAnimationFrame.js needs to be included too.
+        TWEEN.update();
+    }
+
+    function render() {
+     stats.update();
+     trackballControls.update();
+
+     // render using requestAnimationFrame
+     requestAnimationFrame(render);
+     renderer.render(scene, camera);
+    }
+
+    function initStats() {
+    var stats = new Stats();
+    stats.setMode(0); // 0: fps, 1: ms
+    $('body').append(stats.domElement);
+
+    // Align top-left
+    stats.domElement.style.position = 'absolute';
+    stats.domElement.style.left = '0px';
+    stats.domElement.style.top = '0px';
+
+    $("#Stats-output").append( stats.domElement );
+
+    return stats;
+    }
+
+    initStats();
+    animate();
+    render();
+});
+
+</script>
+</body>
+</html>
