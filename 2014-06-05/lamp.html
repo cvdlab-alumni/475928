@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <html>
-<head> 
-<title> Lampada </title> 
-<!-- JavaScript libraries -->
-<script src="http://cdnjs.cloudflare.com/ajax/libs/three.js/r67/three.min.js"></script> 
-<script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-<script src="http://cdnjs.cloudflare.com/ajax/libs/stats.js/r11/Stats.min.js"></script>
-<script src="http://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.5/dat.gui.min.js"></script>
-<script src="assets/libs/TrackballControls.js"></script>
-<script type="text/javascript" src="assets/fonts/helvetiker_regular.typeface.js"></script>
-<script type="text/javascript" src="assets/fonts/helvetiker_bold.typeface.js"></script>
-<script type="text/javascript" src="assets/fonts/bitstream_vera_sans_mono_roman.typeface.js"></script>
-<script src="assets/libs/tween.min.js"></script>
+ <head> 
+  <title> Lampada </title> 
+    <!-- JavaScript libraries -->
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/three.js/r67/three.min.js"></script> 
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/stats.js/r11/Stats.min.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.5/dat.gui.min.js"></script>
+    <script src="assets/libs/TrackballControls.js"></script>
+    <script type="text/javascript" src="assets/fonts/helvetiker_regular.typeface.js"></script>
+    <script type="text/javascript" src="assets/fonts/helvetiker_bold.typeface.js"></script>
+    <script type="text/javascript" src="assets/fonts/bitstream_vera_sans_mono_roman.typeface.js"></script>
+    <script src="assets/libs/tween.min.js"></script>
 <style>
     body {
     margin: 0;
@@ -51,7 +51,7 @@ $(function () {
     renderer.setClearColor(new THREE.Color(0xEEEEEE,1.0));
     renderer.setSize(window.innerWidth,window.innerHeight);
     renderer.shadowMapEnabled = true;
-    renderer.shadowMapAutoUpdate=true;
+    renderer.shadowMapAutoUpdate = true;
     var trackballControls = new THREE.TrackballControls(camera);
 
     // add subtle ambient lighting
@@ -73,6 +73,7 @@ $(function () {
     var planeMaterial = new THREE.MeshLambertMaterial({color: 0x808080});
     var plane = new THREE.Mesh(planeGeometry, planeMaterial);
     plane.receiveShadow = true;
+    plane.castShadow=true;
 
     plane.position.x = -70;
     plane.position.y = 15;
@@ -81,7 +82,7 @@ $(function () {
     // add the plane to the scene
     scene.add(plane);
 
-    camera.lookAt(plane.position);
+    //camera.lookAt(plane.position);
 
     function mkJoint (radius, height) {
         var joint = new THREE.Object3D();
@@ -171,6 +172,11 @@ $(function () {
     spotLight.position.set(0,0,0);
     spotLight.castShadow = true;
     spotLight.receiveShadow = true;
+    
+    spotLight.shadowMapWidth = 512;
+    spotLight.shadowMapHeight = 512;
+    spotLight.shadowCascade = true;
+    
     spotLight.shadowCameraNear = 20;
     spotLight.shadowCameraFar = 2000;
     spotLight.shadowCameraFov = 110;
@@ -302,7 +308,7 @@ $(function () {
     var step = 0;
 
     var controls = new function () {
-      this.spotLightColor = spotLightColor;
+      this.lightColor = spotLightColor;
       this.alpha = 6;
       this.beta = 1.6;
       this.gamma = 1;
@@ -319,21 +325,53 @@ $(function () {
       output.style.cssText = 'position: absolute; left: 50px; top: 300px; font-size: 100px';
       document.body.appendChild( output );
 
-      var tween = new TWEEN.Tween( text0.position )
-        .to( { x: 3 }, 3000 )
+        var tween = new TWEEN.Tween( text0.position )
+        .to( { x: 3 }, 1000 )
         .easing( TWEEN.Easing.Bounce.In )
-        .start();
+        tween.start();
 
-        var tween = new TWEEN.Tween( text1.position )
-        .to( { x: -70 }, 4000 )
-        .easing( TWEEN.Easing.Bounce.In )
-        .start();
+        var tween1 = new TWEEN.Tween( text1.position )
+        .to( { x: -65 }, 2500 )
+        .easing( TWEEN.Easing.Bounce.Out )
 
-      };
+        // tween.chain(tween1);
+
+        //tween.start();
+        
+        var tweenLamp = new TWEEN.Tween( joint2.rotation )
+        .to( { z: 5/2*Math.PI }, 2000 )
+        .easing( TWEEN.Easing.Quadratic.Out )
+
+        tween1.chain(tweenLamp);
+        tween1.start();
+
+        var tweenCube = new TWEEN.Tween( cube.rotation )
+        .to( { z: 5/2*Math.PI }, 2000 )
+        .easing( TWEEN.Easing.Quadratic.Out )
+
+        tweenCube.start();
+
+        var tween1sphere = new TWEEN.Tween( sphere3.position )
+        .to( { z: 100 }, 1000 )
+        .easing( TWEEN.Easing.Linear.None )
+        
+        var tween2sphere = new TWEEN.Tween( sphere3.position )
+        .to( { z: 6 }, 2500 )
+        .easing( TWEEN.Easing.Bounce.Out )
+
+        tween1sphere.chain(tween2sphere);
+        tween1sphere.start();
+
+        var tweenTorus = new TWEEN.Tween( torus.position )
+        .to( { x: 30, y: 7 }, 2000 )
+        .easing( TWEEN.Easing.Quadratic.Out )
+        tweenTorus.start();
+
+        };
     }
 
     var gui = new dat.GUI();
-    gui.addColor(controls, 'spotLightColor').onChange(function (value) {
+    gui.addColor(controls, 'lightColor').onChange(function (value) {
       spotLight.color = new THREE.Color(value);
       smallSphereLightMaterial.color = new THREE.Color(value);
     });
@@ -369,6 +407,7 @@ $(function () {
         sphere3.castShadow=true;
         sphere3.receiveShadow = true;
         plane.receiveShadow=true;
+        plane.castShadow=true;
         text0.castShadow=true;
         text0.receiveShadow=true;
         torus.castShadow = true;
@@ -384,6 +423,7 @@ $(function () {
         sphere3.castShadow=false;
         sphere3.receiveShadow = false;
         plane.receiveShadow=false;
+        plane.castShadow=false;
         text0.castShadow = false;
         text0.receiveShadow = false;
         torus.castShadow = false;
@@ -393,6 +433,7 @@ $(function () {
     
     gui.add(controls, 'startAnimation');
 
+    camera.lookAt(3,-25,2.5);
 
     joint1.rotation.z = 6;
     joint1.sphere.rotation.x = 1.6; 
