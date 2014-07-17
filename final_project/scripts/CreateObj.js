@@ -48,7 +48,7 @@ function insert3Dobj () {
   var cucina5 = loadObj("percolateur");
   cucina5.rotation.y = - Math.PI;
   cucina5.scale.set(.1,.1,.1);
-  cucina5.position.set(90,9.5,-3.7);
+  cucina5.position.set(90,9.2,-3.7);
   obj.add(cucina5);
 
   // BAGNO
